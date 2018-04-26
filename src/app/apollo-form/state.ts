@@ -83,7 +83,7 @@ export class State {
   }
 
   private createLink() {
-    return withClientState({
+    this.link = withClientState({
       cache: this.cache,
       defaults: this.options.defaults,
       resolvers: {
