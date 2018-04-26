@@ -52,10 +52,10 @@ import { Note } from '../models/note';
   `,
   ],
 })
-export class NoteFormComponent implements OnChanges, OnInit {
-  @Input() title = '';
-  @Input() text = '';
-  @Output() submit = new EventEmitter<Note>();
+export class NoteFormComponent implements OnChanges {
+  title = '';
+  text = '';
+  @Output() add = new EventEmitter<Note>();
 
   form: FormGroup;
   formName = 'noteForm';
@@ -73,36 +73,14 @@ export class NoteFormComponent implements OnChanges, OnInit {
       title: '',
       text: '',
     });
-
-    // const state = new State({
-    //   query,
-    //   mutation,
-    //   persist: true,
-    //   name: 'noteForm',
-    //   defaults: this.form.value,
-    // });
-
-    // setTimeout(() => {
-    //   state.read().then(value => {
-    //     if (typeof value !== undefined) {
-    //       this.form.setValue(value);
-    //     }
-    //   });
-    // });
-
-    // this.form.valueChanges.pipe(debounceTime(300)).subscribe(form => {
-    //   state.write(form);
-    // });
   }
 
   ngOnChanges() {
     this.rebuildForm();
   }
 
-  ngOnInit() {}
-
   onSubmit() {
-    this.submit.emit(this.form.value);
+    this.add.emit(this.form.value);
   }
 
   private rebuildForm() {
@@ -111,6 +89,4 @@ export class NoteFormComponent implements OnChanges, OnInit {
       text: this.text,
     });
   }
-
-  // TODO: save form state in sessionStorage via ApolloCache
 }

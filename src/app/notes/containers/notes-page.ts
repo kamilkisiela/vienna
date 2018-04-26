@@ -1,29 +1,70 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { pairwise } from 'rxjs/operators';
+import { pairwise, map } from 'rxjs/operators';
+import { Apollo } from 'apollo-angular';
 
-import { Note } from '../models/note';
+import gql from 'graphql-tag';
+
+import { Note, noteFragment } from '../models/note';
+
+const query = gql`
+  {
+    notes {
+      ...noteFragment
+    }
+  }
+
+  ${noteFragment}
+`;
 
 @Component({
   selector: 'bc-notes-page',
   template: `
-    <bc-note-form [title]="title" [text]="text" (submit)="add($event)"></bc-note-form>
+    <bc-note-form (add)="addNote($event)"></bc-note-form>
     <bc-note-list [notes]="notes$ | async"></bc-note-list>
   `,
 })
 export class NotesPageComponent implements OnInit {
   notes$: Observable<Note[]>;
-  title = '';
-  text = '';
+
+  constructor(private apollo: Apollo) {}
 
   ngOnInit() {
-    this.notes$ = of([
-      { title: 'foo', text: 'Foo text' },
-      { title: 'bar', text: 'bar text' },
-    ]);
+    this.notes$ = this.apollo
+      .watchQuery({
+        query,
+      })
+      .valueChanges.pipe(map((result: any) => result.data.notes));
   }
 
-  add(note: Note): void {
-    console.log('add note', note);
+  addNote(note: Note): void {
+    this.apollo
+      .mutate({
+        mutation: gql`
+          mutation addNote($title: String!, $text: String) {
+            addNote(text: $text, title: $title) {
+              ...noteFragment
+            }
+          }
+
+          ${noteFragment}
+        `,
+        variables: {
+          title: note.title,
+          text: note.text,
+        },
+        update: (proxy, result: any) => {
+          const data: any = proxy.readQuery({ query });
+
+          proxy.writeQuery({
+            query,
+            data: {
+              ...data,
+              notes: [result.data.addNote, ...data.notes],
+            },
+          });
+        },
+      })
+      .subscribe();
   }
 }
