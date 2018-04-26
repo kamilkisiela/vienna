@@ -11,12 +11,16 @@ export const defaults = {
 export const resolvers = {
   Mutation: {
     toggleSidenav: (_, { open }, { cache }: { cache: DataProxy }) => {
-      cache.writeData({
+      cache.writeFragment({
+        fragment: gql`
+          fragment layoutFragment on Layout {
+            showSidenav
+          }
+        `,
+        id: 'Layout',
         data: {
-          layout: {
-            __typename: 'Layout',
-            showSidenav: open,
-          },
+          __typename: 'Layout',
+          showSidenav: open,
         },
       });
 

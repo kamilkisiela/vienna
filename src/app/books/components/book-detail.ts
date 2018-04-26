@@ -58,22 +58,11 @@ import { Book } from '../models/book';
   ],
 })
 export class BookDetailComponent {
-  /**
-   * Presentational components receive data through @Input() and communicate events
-   * through @Output() but generally maintain no internal state of their
-   * own. All decisions are delegated to 'container', or 'smart'
-   * components before data updates flow back down.
-   *
-   * More on 'smart' and 'presentational' components: https://gist.github.com/btroncone/a6e4347326749f938510#utilizing-container-components
-   */
   @Input() book: Book;
   @Input() inCollection: boolean;
   @Output() add = new EventEmitter<Book>();
   @Output() remove = new EventEmitter<Book>();
 
-  /**
-   * Tip: Utilize getters to keep templates clean
-   */
   get id() {
     return this.book.id;
   }

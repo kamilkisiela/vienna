@@ -43,12 +43,10 @@ export class SelectedBookPageComponent implements OnChanges {
           variables: {
             id: this.book && this.book.id,
           },
+          fetchPolicy: 'cache-and-network',
         })
         .valueChanges.pipe(
-          map((result: any) => {
-            console.log('result', result.data);
-            return result.data.isBookInCollection;
-          }),
+          map((result: any) => result.data && result.data.isBookInCollection),
         );
     }
   }

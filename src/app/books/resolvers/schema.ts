@@ -18,8 +18,11 @@ export const schema = `
 
   type Book {
     id: String!
-    inCollection: Boolean
     volumeInfo: VolumeInfo
+  }
+
+  type Collection {
+    books: [Book]
   }
 
   type Mutation {

@@ -9,7 +9,7 @@ import { CoreModule } from './core/core.module';
 import { ApiModule } from './api/api.module';
 
 import { routes } from './routes';
-import { resolvers, defaults, schema } from './resolvers';
+import { resolvers, defaults, schema, redirects } from './resolvers';
 
 import { AppComponent } from './core/containers/app';
 import { environment } from '../environments/environment';
@@ -22,7 +22,7 @@ import { environment } from '../environments/environment';
     HttpClientModule,
     RouterModule.forRoot(routes, { useHash: true }),
     CoreModule.forRoot(),
-    ApiModule.forRoot({ resolvers, defaults, schema }),
+    ApiModule.forRoot({ resolvers, defaults, schema, redirects }),
   ],
   providers: [],
   bootstrap: [AppComponent],

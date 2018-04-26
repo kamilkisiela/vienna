@@ -1,62 +1,85 @@
+import { toIdValue } from 'apollo-utilities';
 import { DataProxy } from 'apollo-cache';
 import gql from 'graphql-tag';
 
-import { bookFragment } from '../models/book';
+const collectionFragment = gql`
+  fragment collectionFragment on Collection {
+    books {
+      id
+    }
+  }
+`;
 
-// const fragment = gql`
-//   fragment bookWithCollection on Book {
-//     id
-//     inCollection
-//   }
-// `;
+export const defaults = {
+  collection: {
+    books: [],
+    __typename: 'Collection',
+  },
+};
 
-const fragment = bookFragment;
-
-export const defaults = {};
-
-const setBookInCollection = (cache, id, value) => {
-  const bookId = `Book:${id}`;
-  const book = cache.readFragment({ fragment, id: bookId });
-
-  book.inCollection = value;
-
-  cache.writeFragment({
-    fragment,
-    id: bookId,
-    data: book,
+const setBookInCollection = (cache, bookId, value) => {
+  const id = 'Collection';
+  const collection = cache.readFragment({
+    fragment: collectionFragment,
+    id,
   });
 
-  console.log('updated', cache.readFragment({ fragment, id: bookId }));
+  if (value === false) {
+    collection.books = collection.books.filter(book => book.id !== bookId);
+  } else if (!collection.books.some(book => book.id === bookId)) {
+    collection.books.push(toIdValue({ id: bookId, typename: 'Book' }, true));
+  } else {
+    return;
+  }
+
+  collection.books = collection.books.map(book => ({
+    ...toIdValue({ id: book.id, typename: 'Book' }, true),
+    __typename: 'Book',
+  }));
+
+  cache.writeFragment({
+    fragment: collectionFragment,
+    id,
+    data: collection,
+  });
+
+  cache.writeQuery({
+    query: gql`
+      query isIt($id: String!) {
+        isBookInCollection(id: $id)
+      }
+    `,
+    variables: {
+      id: bookId,
+    },
+    data: {
+      isBookInCollection: value,
+    },
+  });
 };
 
 export const resolvers = {
   Mutation: {
     addBookToCollection: (_, args, { cache }) => {
-      console.log('add', args.id);
-
       setBookInCollection(cache, args.id, true);
 
       return true;
     },
     removeBookFromCollection: (_, args, { cache }) => {
-      console.log('remove', args.id);
-
       setBookInCollection(cache, args.id, false);
 
       return true;
     },
   },
   Query: {
-    isBookInCollection: (_, args, { cache }: { cache: DataProxy }) => {
-      const id = `Book:${args.id}`;
-      const book: any = cache.readFragment({
-        fragment,
+    isBookInCollection: (_, args, { cache }: { cache }) => {
+      const id = 'Collection';
+      const collection: any = cache.readFragment({
+        fragment: collectionFragment,
         id,
       });
 
-      console.log('is', args.id, 'in collection?', !!book.inCollection);
-
-      return !!book.inCollection;
+      return collection.books.some(book => book.id === args.id);
     },
   },
 };

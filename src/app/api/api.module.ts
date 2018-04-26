@@ -6,13 +6,35 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { persistCache } from 'apollo-cache-persist';
 import { withClientState } from 'apollo-link-state';
 
-function createApollo({ resolvers, schema, defaults = {} }) {
-  const cache = new InMemoryCache();
+function createApollo({ resolvers, schema, redirects, defaults = {} }) {
+  // XXX: temporary thing
+  let cache: InMemoryCache;
 
-  // persistCache({
-  //   cache,
-  //   storage: localStorage,
-  // });
+  cache = new InMemoryCache({
+    dataIdFromObject: (obj: any) => {
+      if (!obj) {
+        return null;
+      }
+
+      const byType = ['Collection', 'Layout'];
+
+      if (byType.indexOf(obj.__typename) !== -1) {
+        return obj.__typename;
+      }
+
+      if (obj.id) {
+        return obj.__typename ? `${obj.__typename}:${obj.id}` : obj.id;
+      }
+
+      return null;
+    },
+    cacheRedirects: redirects(cache),
+  });
+
+  persistCache({
+    cache,
+    storage: sessionStorage,
+  });
 
   const state = withClientState({
     cache,
@@ -39,13 +61,13 @@ function createApollo({ resolvers, schema, defaults = {} }) {
   imports: [HttpClientModule, ApolloModule, HttpLinkModule],
 })
 export class ApiModule {
-  static forRoot({ resolvers, schema, defaults }) {
+  static forRoot({ resolvers, schema, defaults, redirects }) {
     return {
       ngModule: ApiModule,
       providers: [
         {
           provide: APP_INITIALIZER,
-          useFactory: createApollo({ resolvers, schema, defaults }),
+          useFactory: createApollo({ resolvers, schema, defaults, redirects }),
           deps: [Apollo, HttpLink],
           multi: true,
         },

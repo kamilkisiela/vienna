@@ -1,28 +1,17 @@
-import * as core from './core/resolvers/schema';
-import * as coreLayout from './core/resolvers/layout';
-import * as books from './books/resolvers/schema';
-import * as booksBooks from './books/resolvers/books';
-import * as collectionsCollections from './books/resolvers/collections';
+import { toIdValue } from 'apollo-utilities';
+import * as merge from 'lodash.merge';
 
-// this won't work later because it will overwrite the Mutation
-export const resolvers = {
-  ...coreLayout.resolvers,
-  ...booksBooks.resolvers,
-  ...collectionsCollections.resolvers,
-  Mutation: {
-    ...coreLayout.resolvers.Mutation,
-    ...booksBooks.resolvers.Mutation,
-    ...collectionsCollections.resolvers.Mutation,
-  },
+import * as core from './core/resolvers';
+import * as books from './books/resolvers';
+
+export const resolvers = merge({}, core.resolvers, books.resolvers);
+
+export const defaults = merge({}, core.defaults, books.defaults);
+
+export const redirects = (cache: any) => ({
   Query: {
-    ...booksBooks.resolvers.Query,
-    ...collectionsCollections.resolvers.Query,
+    book: (_, { id }) => toIdValue(`Book:${id}`),
   },
-};
-
-export const defaults = {
-  ...coreLayout.defaults,
-  ...collectionsCollections.defaults,
-};
+});
 
 export const schema = [core.schema, books.schema];

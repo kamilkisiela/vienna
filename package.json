@@ -1,5 +1,5 @@
 {
-  "name": "apollo-flux",
+  "name": "apollo-state-example",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
@@ -36,6 +36,7 @@
     "graphql": "^0.13.2",
     "graphql-tag": "^2.9.1",
     "hammerjs": "^2.0.8",
+    "lodash.merge": "^4.6.1",
     "rxjs": "^6.0.0-rc.0",
     "rxjs-compat": "^6.0.0",
     "zone.js": "^0.8.24"
