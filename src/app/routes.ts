@@ -8,5 +8,9 @@ export const routes: Routes = [
     path: 'books',
     loadChildren: './books/books.module#BooksModule',
   },
+  {
+    path: 'notes',
+    loadChildren: './notes/notes.module#NotesModule',
+  },
   { path: '**', component: NotFoundPageComponent },
 ];

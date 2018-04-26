@@ -3,10 +3,21 @@ import * as merge from 'lodash.merge';
 
 import * as core from './core/resolvers';
 import * as books from './books/resolvers';
+import * as notes from './notes/resolvers';
 
-export const resolvers = merge({}, core.resolvers, books.resolvers);
+export const resolvers = merge(
+  {},
+  core.resolvers,
+  books.resolvers,
+  notes.resolvers,
+);
 
-export const defaults = merge({}, core.defaults, books.defaults);
+export const defaults = merge(
+  {},
+  core.defaults,
+  books.defaults,
+  notes.defaults,
+);
 
 export const redirects = (cache: any) => ({
   Query: {
@@ -14,4 +25,4 @@ export const redirects = (cache: any) => ({
   },
 });
 
-export const schema = [core.schema, books.schema];
+export const schema = [core.schema, books.schema, notes.schema];

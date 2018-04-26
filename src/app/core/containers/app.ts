@@ -17,6 +17,9 @@ import gql from 'graphql-tag';
         <bc-nav-item (navigate)="closeSidenav()" routerLink="/books/find" icon="search" hint="Find your next book!">
           Browse Books
         </bc-nav-item>
+        <bc-nav-item (navigate)="closeSidenav()" routerLink="/notes" icon="search" hint="Make notes!">
+          Notes
+        </bc-nav-item>
       </bc-sidenav>
       <bc-toolbar (openMenu)="openSidenav()">
         Book Collection
