@@ -1,4 +1,5 @@
 import { ApolloClient } from 'apollo-client';
+import { ApolloLink } from 'apollo-link';
 import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import { withClientState } from 'apollo-link-state';
 import { CachePersistor } from 'apollo-cache-persist';
@@ -17,45 +18,37 @@ interface Options {
   defaults?: any;
 }
 
+const toForm = (formName: string) => (result: any) => {
+  const state = result.data && result.data[formName];
+
+  if (state) {
+    return omit(state, '__typename');
+  }
+};
+
 export class State {
   private client: ApolloClient<any>;
   private cache: InMemoryCache;
+  private link: ApolloLink;
   private persistor: CachePersistor<NormalizedCacheObject>;
   private storageKey: string;
 
   constructor(private options: Options) {
-    this.cache = new InMemoryCache();
-    const link = this.createLink();
-
     this.storageKey = `[apollo-form] ${this.options.name}`;
-
-    this.persistor = new CachePersistor({
-      cache: this.cache,
-      storage: sessionStorage,
-      key: this.storageKey,
-    });
-    this.persistor.restore();
-
-    this.client = new ApolloClient({
-      cache: this.cache,
-      link,
-    });
-
-    if (!window['__STATE__']) {
-      window['__STATE__'] = {};
-    }
-
-    window['__STATE__'][this.options.name] = this.client;
+    this.createCache();
+    this.createLink();
+    this.createPersistor();
+    this.createClient();
   }
 
-  isStored(): boolean {
+  public isStored(): boolean {
     return (
       !!sessionStorage.getItem(this.storageKey) &&
       sessionStorage.getItem(this.storageKey) !== '{}'
     );
   }
 
-  write(state) {
+  public write(state) {
     this.client.mutate({
       mutation,
       variables: {
@@ -64,39 +57,27 @@ export class State {
     });
   }
 
-  read() {
+  public read() {
     if (this.isStored()) {
       return this.client
         .query({
           query: this.options.query,
         })
-        .then((result: any) => {
-          const state = result.data && result.data[this.options.name];
-
-          if (!!state) {
-            return omit(state, '__typename');
-          }
-        });
+        .then(toForm(this.options.name));
     } else {
       return Promise.resolve();
     }
   }
 
-  watch() {
+  public watch() {
     return this.client
       .watchQuery({
         query: this.options.query,
       })
-      .map((result: any) => {
-        const state = result.data && result.data[this.options.name];
-
-        if (!!state) {
-          return omit(state, '__typename');
-        }
-      });
+      .map(toForm(this.options.name));
   }
 
-  clear() {
+  public clear() {
     this.client.resetStore();
     this.persistor.purge();
   }
@@ -126,6 +107,26 @@ export class State {
           },
         },
       },
+    });
+  }
+
+  private createPersistor() {
+    this.persistor = new CachePersistor({
+      cache: this.cache,
+      storage: sessionStorage,
+      key: this.storageKey,
+    });
+    this.persistor.restore();
+  }
+
+  private createCache() {
+    this.cache = new InMemoryCache();
+  }
+
+  private createClient() {
+    this.client = new ApolloClient({
+      cache: this.cache,
+      link: this.link,
     });
   }
 }
